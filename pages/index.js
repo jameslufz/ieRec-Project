@@ -1,65 +1,82 @@
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import Link from 'next/link'
 
-export default function Home() {
-  return (
-    <div className={styles.container}>
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+import { Navbar,Nav,Carousel,Form,Button,Row,Col,Container } from 'react-bootstrap'
+import 'bootstrap/dist/css/bootstrap.min.css'
 
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
+import NProgress from 'nprogress'
+import 'nprogress/nprogress.css'
 
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
+import Swal from 'sweetalert2'
 
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
+import { useRef } from 'react'
+import { Router } from 'next/dist/client/router'
 
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
+Router.events.on('routeChangeStart', () => NProgress.start())
+Router.events.on('routeChangeComplete', () => NProgress.done())
+Router.events.on('routeChangeError', () => NProgress.done())
 
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
+export default function login() {
 
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
+    const   usernameRef =   useRef(null)
+    const   passwordRef =   useRef(null)
 
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
-    </div>
-  )
+    async function handlerLogin () {
+        
+        NProgress.start()
+        const   res     =   await fetch('https://lufz-api.herokuapp.com/member/login',{
+            method  :   'POST',
+            headers :   {
+                'Content-type'  :   'application/json'
+            },
+            body    :   JSON.stringify({
+                username   :   usernameRef.current.value,
+                password   :   passwordRef.current.value
+            })
+        })
+        const   data    =   await res.json()
+        NProgress.done()
+        const   status  =   data.status ? data.status : false
+        if(status){
+            Swal.fire("Error",data.message,data.status)
+        }
+    }
+
+    return  <>
+            <Carousel>
+                <Carousel.Item>
+                <img
+                    className="d-block w-100"
+                    src="https://www.w3schools.com/howto/img_nature_wide.jpg"
+                    alt="First slide"
+                />
+                <Carousel.Caption>
+                    <h3>First slide label</h3>
+                    <p>Nulla vitae elit libero, a pharetra augue mollis interdum.</p>
+                </Carousel.Caption>
+                </Carousel.Item>
+                <Carousel.Item>
+                    <img
+                        className="d-block w-100"
+                        src="https://www.w3schools.com/howto/img_snow_wide.jpg"
+                        alt="Third slide"
+                    />
+                <Carousel.Caption>
+                    <h3>Second slide label</h3>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                </Carousel.Caption>
+            </Carousel.Item>
+
+            <Carousel.Item>
+                <img
+                className="d-block w-100"
+                src="https://www.w3schools.com/howto/img_lights_wide.jpg"
+                alt="Third slide"
+                />
+            <Carousel.Caption>
+                <h3>Third slide label</h3>
+                <p>Praesent commodo cursus magna, vel scelerisque nisl consectetur.</p>
+              </Carousel.Caption>
+            </Carousel.Item>
+        </Carousel>
+    </>
 }
