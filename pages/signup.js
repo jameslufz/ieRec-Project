@@ -1,30 +1,42 @@
 import Head from 'next/head'
 import Link from 'next/link'
 
-import { Image,Form,FormControl,InputGroup,Button,Row,Col } from 'react-bootstrap'
-import 'bootstrap/dist/css/bootstrap.min.css'
+import { Image,Form,FormControl,InputGroup,Button,Row,Col,Toast } from 'react-bootstrap'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faKey } from '@fortawesome/free-solid-svg-icons'
 
 import NProgress from 'nprogress'
-import 'nprogress/nprogress.css'
 
-import { useRef } from 'react'
+import { useRef,useState,useEffect } from 'react'
+import Router from 'next/router'
+ 
+import { AuthUser } from '../utils/authUsers'
+import { Nav_Loggedin } from '../component/navbar'
 
-export default function login() {
+export default function login({ LoggedIn }) {
 
-    const   username    =   useRef(null)
-    const   pwd         =   useRef(null)
-    const   con_pwd     =   useRef(null)
-    const   fname       =   useRef(null)
-    const   lname       =   useRef(null)
-    const   accept      =   useRef(null)
+    useEffect(() => {
+        if(LoggedIn.identify) Router.push('/')
+    },[])
+
+    const   username                    =   useRef(null)
+    const   pwd                         =   useRef(null)
+    const   con_pwd                     =   useRef(null)
+    const   fname                       =   useRef(null)
+    const   lname                       =   useRef(null)
+    const   [accept,setAccept]          =   useState(false)
+
+    const   [load,setLoad]              =   useState(),
+            [topic,setTopic]            =   useState(),
+            [notify,setNotify]          =   useState(),
+            [viewAlert,setViewAlert]    =   useState(false),
+            ToggleViewAlert =   ()  =>  setViewAlert(!viewAlert)
 
     async function handlerSignup()  {
-
+        console.log(process.env.PRIVATE_KEY)
         NProgress.start()
-        const   register    =   await fetch('https://lufz-api.herokuapp.com/member/signup',{
+        const   signup  =   await fetch('/api/signup',{
             method  :   'POST',
             headers :   {
                 'Content-Type'  :   'Application/json'
@@ -34,19 +46,24 @@ export default function login() {
                 password    :   pwd.current.value,
                 con_password:   con_pwd.current.value,
                 first_name  :   fname.current.value,
-                last_name   :   lname.current.value
+                last_name   :   lname.current.value,
+                accept_pvc  :   accept
             })
         })
-
-        const   resp    =   await register.json()
+        
+        const   resp    =   await signup.json()
         NProgress.done()
-
+        
+        setNotify(resp.message)
+        setViewAlert(true)
+        if(resp.status == 1) await router.replace("/signin")
     }
 
     return  <>
             <Head>
-                <title>สมัครสมาชิก - ระบบบันทึกรายรับรายจ่าย</title>
+                <title>สมัครสมาชิก</title>
             </Head>
+            <Nav_Loggedin />
             <Row className="mx-0">
                 <Col md={{span:6, offset:3}}>
                     <Image  src="./logo450x200.png"
@@ -54,7 +71,7 @@ export default function login() {
                             height={110}
                             className="d-block mx-auto my-3"
                     />
-                    <h2 className="text-center">สมัครสมาชิก</h2>
+                    <h2 className="text-center">สมัครสมาชิก {process.env.PRIVATE_KEY}</h2>
                     <p className="text-center">ขอบคุณสำหรับความไว้ใจ ยินดีต้อนรับสมาชิกใหม่ครับ</p>
                     <Form.Group>
                         <Form.Label>ชื่อผู้ใช้</Form.Label>
@@ -101,7 +118,7 @@ export default function login() {
                     </Form.Group>
 
                     <Form.Group>
-                        <Form.Check type="checkbox" label="ยอมรับข้อตกลง เงื่อนไขการใช้บริการ" ref={accept} />
+                        <Form.Check type="checkbox" defaultChecked={accept} onChange={()=>setAccept(!accept)} label="ยอมรับข้อตกลง เงื่อนไขการใช้บริการ" />
                         <Link href="/policy" className="text-muted">ดูเงื่อนไขการใช้บริการได้ที่นี่</Link>
                     </Form.Group>
 
@@ -112,5 +129,26 @@ export default function login() {
                     </Form.Group>
                 </Col>
             </Row>
+
+            <Toast  show={viewAlert} onClose={ToggleViewAlert}
+                    delay={5000} autohide
+                    style={{position:'fixed',top:'3rem',right:10,width:'100%',maxWidth:460,zIndex:9999}}>
+                <Toast.Header>
+                    <strong className="mr-auto">แจ้งเตือน</strong>
+                    <small>เมื่อสักครู่</small>
+                </Toast.Header>
+                <Toast.Body>{notify}</Toast.Body>
+            </Toast>
         </>
+}
+
+export const getServerSideProps = async ({ req, res }) => {
+
+    const   data    =   await AuthUser(req, res)
+    return {
+        props   :   {
+            LoggedIn    :   data
+        }
+    }
+
 }

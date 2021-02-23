@@ -10,12 +10,15 @@ import Swal from 'sweetalert2'
 
 import { useRef } from 'react'
 import { Router } from 'next/dist/client/router'
+import { Nav_Loggedin, Nav_unLoggedin } from '../component/navbar'
+import { AuthUser } from '../utils/authUsers'
+
 
 Router.events.on('routeChangeStart', () => NProgress.start())
 Router.events.on('routeChangeComplete', () => NProgress.done())
 Router.events.on('routeChangeError', () => NProgress.done())
 
-export default function login() {
+export default function Index({ authen }) {
 
     const   usernameRef =   useRef(null)
     const   passwordRef =   useRef(null)
@@ -42,6 +45,7 @@ export default function login() {
     }
 
     return  <>
+            {authen.identify ? <Nav_Loggedin /> : <Nav_unLoggedin />}
             <Carousel>
                 <Carousel.Item>
                 <img
@@ -79,4 +83,16 @@ export default function login() {
             </Carousel.Item>
         </Carousel>
     </>
+}
+
+export const getServerSideProps = async ({ req, res }) => {
+
+    const data = await AuthUser(req,res)
+
+    return {
+        props : {
+            authen : data
+        }
+    }
+
 }
